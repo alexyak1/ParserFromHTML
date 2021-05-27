@@ -67,7 +67,6 @@ func main() {
 
 		finalData = append(finalData, TableData{name, candy, eatenCandiesInt})
 	}
-	fmt.Println(finalData)
 
 	groupedByName := make(map[string]map[string]int)
 
@@ -80,6 +79,12 @@ func main() {
 
 		} else {
 			groupedByName[data.name] = map[string]int{"count": data.eaten}
+		}
+
+		if _, ok := groupedByName[data.name][data.candy]; ok {
+			groupedByName[data.name][data.candy] = groupedByName[data.name][data.candy] + 1
+		} else {
+			groupedByName[data.name][data.candy] = 1
 		}
 	}
 	fmt.Println(groupedByName)
