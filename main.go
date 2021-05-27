@@ -6,10 +6,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 )
 
+type TableData struct {
+	name  string
+	candy string
+	eaten string
+}
+
 func main() {
+
 	response, err := http.Get("https://candystore.zimpler.net/")
 	if err != nil {
 		log.Fatal(err)
@@ -36,11 +44,26 @@ func main() {
 
 	tableData := pageContent[startIndex:endIndex]
 
-	splittedTableData := strings.Split(tableData, "<tr>")
+	splitted := strings.Split(tableData, "<tr>")
 
-	for i, tableRowData := range splittedTableData {
-		fmt.Println(i)
-		splittedRowData := strings.Split(tableRowData, "<td>")
-		fmt.Println(splittedRowData)
+	var finalData []TableData
+
+	for i, tableRowData := range splitted {
+		if i == 0 {
+			continue
+		}
+
+		textInRow := strings.Split(tableRowData, "<td>")
+
+		pattern := regexp.MustCompile(`([^"]*) *</td>`)
+		patternForInt := regexp.MustCompile(`[-]?\d[\d,]*[\.]?[\d{2}]*`)
+
+		submatchall := patternForInt.FindAllString(textInRow[3], -1)
+
+		finalData = append(finalData, TableData{pattern.ReplaceAllString(textInRow[1], "${1}"),
+			pattern.ReplaceAllString(textInRow[2], "${1}"),
+			submatchall[0]})
 	}
+	fmt.Println(finalData)
+
 }
