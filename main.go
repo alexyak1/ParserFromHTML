@@ -13,7 +13,7 @@ import (
 type TableData struct {
 	name  string
 	candy string
-	eaten string
+	eaten int
 }
 
 func main() {
@@ -55,15 +55,31 @@ func main() {
 
 		textInRow := strings.Split(tableRowData, "<td>")
 
-		pattern := regexp.MustCompile(`([^"]*) *</td>`)
+		pattern := regexp.MustCompile(`[a-zA-Z]*`)
 		patternForInt := regexp.MustCompile(`[-]?\d[\d,]*[\.]?[\d{2}]*`)
 
-		submatchall := patternForInt.FindAllString(textInRow[3], -1)
+		name := pattern.FindAllString(textInRow[1], -4)[0]
+		candy := pattern.FindAllString(textInRow[2], -1)[0]
+		eatenCandies := patternForInt.FindAllString(textInRow[3], -1)[0]
 
-		finalData = append(finalData, TableData{pattern.ReplaceAllString(textInRow[1], "${1}"),
-			pattern.ReplaceAllString(textInRow[2], "${1}"),
-			submatchall[0]})
+		var eatenCandiesInt int
+		fmt.Sscan(eatenCandies, &eatenCandiesInt) //convert string to int
+
+		finalData = append(finalData, TableData{name, candy, eatenCandiesInt})
 	}
-	fmt.Println(finalData)
 
+	groupedByName := make(map[string]map[string]int)
+
+	for _, data := range finalData {
+
+		if el, ok := groupedByName[data.name]; ok {
+			newCount := el["count"] + data.eaten
+
+			groupedByName[data.name]["count"] = newCount
+
+		} else {
+			groupedByName[data.name] = map[string]int{"count": data.eaten}
+		}
+	}
+	fmt.Println(groupedByName)
 }
