@@ -55,7 +55,7 @@ func main() {
 
 		textInRow := strings.Split(tableRowData, "<td>")
 
-		pattern := regexp.MustCompile(`[a-zA-Z]*`)
+		pattern := regexp.MustCompile(`[a-zA-ZäöåÄÖÅ]*`)
 		patternForInt := regexp.MustCompile(`[-]?\d[\d,]*[\.]?[\d{2}]*`)
 
 		name := pattern.FindAllString(textInRow[1], -4)[0]
@@ -67,6 +67,7 @@ func main() {
 
 		finalData = append(finalData, TableData{name, candy, eatenCandiesInt})
 	}
+	fmt.Println(finalData)
 
 	groupedByName := make(map[string]map[string]int)
 
