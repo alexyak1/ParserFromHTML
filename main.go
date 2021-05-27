@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -87,5 +88,28 @@ func main() {
 			groupedByName[data.name][data.candy] = 1
 		}
 	}
-	fmt.Println(groupedByName)
+	// fmt.Println(groupedByName)
+
+	// now sort by most eated candyes
+	nameCount := make(map[string]int)
+
+	for name, dataCollection := range groupedByName {
+		nameCount[name] = dataCollection["count"]
+	}
+
+	valueKey := map[int][]string{}
+	var numbersOfEatedCandys []int
+	for key, v := range nameCount {
+		valueKey[v] = append(valueKey[v], key)
+	}
+
+	for key := range valueKey {
+		numbersOfEatedCandys = append(numbersOfEatedCandys, key)
+	}
+	sort.Sort(sort.Reverse(sort.IntSlice(numbersOfEatedCandys)))
+	for _, key := range numbersOfEatedCandys {
+		for _, name := range valueKey[key] {
+			fmt.Printf("%s, %d\n", name, key)
+		}
+	}
 }
