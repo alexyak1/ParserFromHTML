@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -18,10 +20,12 @@ type TableData struct {
 }
 
 type StructedResult struct {
-	name           string
-	favouriteSnack string
-	totalSnacks    int
+	Name           string
+	FavouriteSnack string
+	TotalSnacks    string
 }
+
+var globalAggregatedData []StructedResult
 
 func main() {
 	tableData := getExtractedTable("https://candystore.zimpler.net/")
@@ -51,11 +55,22 @@ func main() {
 	}
 	favoriteCandy := getFavoriteCandy(candiesByName)
 
-	aggregatedData := getSortedData(totalSnacksPerName, favoriteCandy)
-	fmt.Println(aggregatedData)
+	setSortedData(totalSnacksPerName, favoriteCandy)
+	fmt.Println(globalAggregatedData)
+
+	handleRequests()
+}
+func handleRequests() {
+	http.HandleFunc("/", returnAllData)
+	log.Fatal(http.ListenAndServe(":10000", nil))
+}
+func returnAllData(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: returnAllArticles")
+
+	json.NewEncoder(w).Encode(globalAggregatedData)
 }
 
-func getSortedData(totalSnacksPerName map[string]int, favoriteCandy map[string]string) []StructedResult {
+func setSortedData(totalSnacksPerName map[string]int, favoriteCandy map[string]string) {
 	var result []StructedResult
 
 	valueKey := map[int][]string{}
@@ -71,10 +86,10 @@ func getSortedData(totalSnacksPerName map[string]int, favoriteCandy map[string]s
 	for _, totalSnacks := range numbersOfEatedCandys {
 		for _, name := range valueKey[totalSnacks] {
 			fmt.Printf("%s, %d\n", name, totalSnacks)
-			result = append(result, StructedResult{name, favoriteCandy[name], totalSnacks})
+			result = append(result, StructedResult{name, favoriteCandy[name], strconv.Itoa(totalSnacks)})
 		}
 	}
-	return result
+	globalAggregatedData = result
 }
 
 func getExtractedTable(url string) string {
@@ -82,7 +97,6 @@ func getExtractedTable(url string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer response.Body.Close()
 
 	dataFromDOM, _ := ioutil.ReadAll(response.Body)
