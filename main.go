@@ -17,9 +17,70 @@ type TableData struct {
 	eaten int
 }
 
-func main() {
+type StructedResult struct {
+	name string
+	// favouriteSnack string
+	totalSnacks int
+}
 
-	response, err := http.Get("https://candystore.zimpler.net/")
+func main() {
+	tableData := getExtractedTable("https://candystore.zimpler.net/")
+	finalTableData := getTableData(strings.Split(tableData, "<tr>"))
+
+	candiesByName := make(map[string]map[string]int)
+	totalSnacksPerName := make(map[string]int)
+
+	for _, data := range finalTableData {
+		if _, ok := totalSnacksPerName[data.name]; ok {
+			newCount := totalSnacksPerName[data.name] + data.eaten
+			totalSnacksPerName[data.name] = newCount
+		} else {
+			totalSnacksPerName[data.name] = data.eaten
+		}
+
+		if _, ok := candiesByName[data.name]; ok {
+		} else {
+			candiesByName[data.name] = map[string]int{data.candy: 0}
+		}
+
+		if _, ok := candiesByName[data.name][data.candy]; ok {
+			candiesByName[data.name][data.candy] = candiesByName[data.name][data.candy] + data.eaten
+		} else {
+			candiesByName[data.name][data.candy] = data.eaten
+		}
+	}
+	aggregatedData := getSortedData(totalSnacksPerName)
+
+	fmt.Println(aggregatedData)
+
+	// getFavoriteCandy(candiesByName)
+}
+
+func getSortedData(totalSnacksPerName map[string]int) []StructedResult {
+	var result []StructedResult
+
+	valueKey := map[int][]string{}
+	var numbersOfEatedCandys []int
+	for key, v := range totalSnacksPerName {
+		valueKey[v] = append(valueKey[v], key)
+	}
+
+	for key := range valueKey {
+		numbersOfEatedCandys = append(numbersOfEatedCandys, key)
+	}
+	sort.Sort(sort.Reverse(sort.IntSlice(numbersOfEatedCandys)))
+	for _, totalSnacks := range numbersOfEatedCandys {
+		for _, name := range valueKey[totalSnacks] {
+			fmt.Printf("%s, %d\n", name, totalSnacks)
+			result = append(result, StructedResult{name, totalSnacks})
+
+		}
+	}
+	return result
+}
+
+func getExtractedTable(url string) string {
+	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,10 +104,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	tableData := pageContent[startIndex:endIndex]
+	return pageContent[startIndex:endIndex]
+}
 
-	splitted := strings.Split(tableData, "<tr>")
-
+func getTableData(splitted []string) []TableData {
 	var finalData []TableData
 
 	for i, tableRowData := range splitted {
@@ -68,48 +129,22 @@ func main() {
 
 		finalData = append(finalData, TableData{name, candy, eatenCandiesInt})
 	}
+	return finalData
+}
 
-	groupedByName := make(map[string]map[string]int)
+func getFavoriteCandy(candiesByName map[string]map[string]int) {
 
-	for _, data := range finalData {
+	candyCount := make(map[string]int)
 
-		if el, ok := groupedByName[data.name]; ok {
-			newCount := el["count"] + data.eaten
+	for name, dataCollection := range candiesByName {
+		findFamost := make(map[string]int)
+		for candy, count := range dataCollection {
+			if candy != "count" {
+				findFamost[candy] = count
+			}
+			candyCount[name] = findFamost[candy] //for now
 
-			groupedByName[data.name]["count"] = newCount
-
-		} else {
-			groupedByName[data.name] = map[string]int{"count": data.eaten}
-		}
-
-		if _, ok := groupedByName[data.name][data.candy]; ok {
-			groupedByName[data.name][data.candy] = groupedByName[data.name][data.candy] + 1
-		} else {
-			groupedByName[data.name][data.candy] = 1
 		}
 	}
-	// fmt.Println(groupedByName)
-
-	// now sort by most eated candyes
-	nameCount := make(map[string]int)
-
-	for name, dataCollection := range groupedByName {
-		nameCount[name] = dataCollection["count"]
-	}
-
-	valueKey := map[int][]string{}
-	var numbersOfEatedCandys []int
-	for key, v := range nameCount {
-		valueKey[v] = append(valueKey[v], key)
-	}
-
-	for key := range valueKey {
-		numbersOfEatedCandys = append(numbersOfEatedCandys, key)
-	}
-	sort.Sort(sort.Reverse(sort.IntSlice(numbersOfEatedCandys)))
-	for _, key := range numbersOfEatedCandys {
-		for _, name := range valueKey[key] {
-			fmt.Printf("%s, %d\n", name, key)
-		}
-	}
+	fmt.Println(candyCount)
 }
