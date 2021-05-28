@@ -56,7 +56,7 @@ func main() {
 	favoriteCandy := getFavoriteCandy(candiesByName)
 
 	setSortedData(totalSnacksPerName, favoriteCandy)
-	fmt.Println(globalAggregatedData)
+	fmt.Println("Data from table to show: ", globalAggregatedData)
 
 	handleRequests()
 }
@@ -65,8 +65,6 @@ func handleRequests() {
 	log.Fatal(http.ListenAndServe(":10000", nil))
 }
 func returnAllData(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Endpoint Hit: returnAllArticles")
-
 	json.NewEncoder(w).Encode(globalAggregatedData)
 }
 
@@ -85,7 +83,6 @@ func setSortedData(totalSnacksPerName map[string]int, favoriteCandy map[string]s
 	sort.Sort(sort.Reverse(sort.IntSlice(numbersOfEatedCandys)))
 	for _, totalSnacks := range numbersOfEatedCandys {
 		for _, name := range valueKey[totalSnacks] {
-			fmt.Printf("%s, %d\n", name, totalSnacks)
 			result = append(result, StructedResult{name, favoriteCandy[name], strconv.Itoa(totalSnacks)})
 		}
 	}
