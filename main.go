@@ -18,9 +18,9 @@ type TableData struct {
 }
 
 type StructedResult struct {
-	name string
-	// favouriteSnack string
-	totalSnacks int
+	name           string
+	favouriteSnack string
+	totalSnacks    int
 }
 
 func main() {
@@ -49,14 +49,13 @@ func main() {
 			candiesByName[data.name][data.candy] = data.eaten
 		}
 	}
-	aggregatedData := getSortedData(totalSnacksPerName)
+	favoriteCandy := getFavoriteCandy(candiesByName)
 
+	aggregatedData := getSortedData(totalSnacksPerName, favoriteCandy)
 	fmt.Println(aggregatedData)
-
-	// getFavoriteCandy(candiesByName)
 }
 
-func getSortedData(totalSnacksPerName map[string]int) []StructedResult {
+func getSortedData(totalSnacksPerName map[string]int, favoriteCandy map[string]string) []StructedResult {
 	var result []StructedResult
 
 	valueKey := map[int][]string{}
@@ -72,8 +71,7 @@ func getSortedData(totalSnacksPerName map[string]int) []StructedResult {
 	for _, totalSnacks := range numbersOfEatedCandys {
 		for _, name := range valueKey[totalSnacks] {
 			fmt.Printf("%s, %d\n", name, totalSnacks)
-			result = append(result, StructedResult{name, totalSnacks})
-
+			result = append(result, StructedResult{name, favoriteCandy[name], totalSnacks})
 		}
 	}
 	return result
@@ -132,19 +130,24 @@ func getTableData(splitted []string) []TableData {
 	return finalData
 }
 
-func getFavoriteCandy(candiesByName map[string]map[string]int) {
-
-	candyCount := make(map[string]int)
+func getFavoriteCandy(candiesByName map[string]map[string]int) map[string]string {
+	candyCount := make(map[string]string)
 
 	for name, dataCollection := range candiesByName {
-		findFamost := make(map[string]int)
+		famostCandy := make(map[string]int)
+		candyName := ""
 		for candy, count := range dataCollection {
-			if candy != "count" {
-				findFamost[candy] = count
+			if len(famostCandy) == 0 {
+				famostCandy[candy] = count
+				candyName = candy
 			}
-			candyCount[name] = findFamost[candy] //for now
+			if count > famostCandy[candyName] {
+				famostCandy[candy] = count
+				candyName = candy
+			}
 
+			candyCount[name] = candyName
 		}
 	}
-	fmt.Println(candyCount)
+	return candyCount
 }
