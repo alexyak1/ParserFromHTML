@@ -33,5 +33,5 @@ url for parsed web site: https://candystore.zimpler.net/
 
 * Clone repository: `git clone https://github.com/alexyak1/ZimplerParser.git`
 * Run command `go run main.go` <br>
-    or build project `go build` and `./parser`  
+    or build project `go build` and `./ZimplerParser`  
 * open http://127.0.0.1:10000/ in a browser 
